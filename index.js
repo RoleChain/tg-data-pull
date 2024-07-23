@@ -1,6 +1,8 @@
 const api = require('./api');
 const prompt = require('prompt');
 const { t1 } = require('@mtproto/core');
+const express = require('express')
+const app = express()
 
 // Fetch user details
 async function getUser() {
@@ -63,9 +65,11 @@ async function delay(ms) {
 }
 
 // Main script execution
-(async () => {
+app.get('/telegram', 
+async (req,res) => {
   const user = await getUser();
-
+  const offset= req.query.offset?req.query.offset: 0
+  const limit= req.query.limit?req.query.limit: 0
   if (!user) {
     const { phone } = await prompt.get("phone");
     const { phone_code_hash } = await sendCode(phone);
@@ -102,7 +106,7 @@ async function delay(ms) {
     access_hash: channel.access_hash,
   };
 
-  const LIMIT_COUNT = 10;
+  const LIMIT_COUNT = limit;
   const allMessages = [];
   const firstHistoryResult = await callApiWithRetry('messages.getHistory', {
     peer: inputPeer,
@@ -112,12 +116,12 @@ async function delay(ms) {
   const historyCount = firstHistoryResult.count;
 
   // Fetch message history in chunks with delay
-  for (let offset = 0; offset < 50; offset += LIMIT_COUNT) {
+  for (let offset = 0; offset < 100; offset += 100) {
     try {
       const history = await callApiWithRetry('messages.getHistory', {
         peer: inputPeer,
         add_offset: offset,
-        limit: LIMIT_COUNT,
+        limit: 100,
       });
 
       for(let i of history.messages){
@@ -128,12 +132,14 @@ async function delay(ms) {
         }
       }
       // Add delay between fetches to avoid rate limiting
-      await delay(2000); // Delay of 2 seconds (2000 milliseconds)
+      await delay(1000); // Delay of 2 seconds (2000 milliseconds)
     } catch (error) {
       console.log('Error fetching message history:', error);
       break; // Exit the loop if there is an error
     }
   }
 
-  console.log('allMessages:', allMessages);
-})();
+  res.json(allMessages);
+});
+
+app.listen(3008)
