@@ -164,4 +164,4 @@ async (req,res) => {
   res.json(allMessages);
 });
 
-app.listen(3008)
+app.listen(3010)
