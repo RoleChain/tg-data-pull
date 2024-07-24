@@ -4,17 +4,8 @@ const { t1 } = require('@mtproto/core');
 const express = require('express')
 const app = express()
 const cors = require('cors')
-const https = require('https');
-const http = require('http');
-const fs = require('fs')
-const path = require('path');
 
 app.use(cors());
-
-const sslOptions = {
-  key: fs.readFileSync(path.resolve(__dirname, 'selfsigned.key')),
-  cert: fs.readFileSync(path.resolve(__dirname, 'selfsigned.crt')),
-};
 
 app.use((req, res, next) => {
   if (req.secure) {
@@ -173,14 +164,4 @@ async (req,res) => {
   res.json(allMessages);
 });
 
-https.createServer(sslOptions, app).listen(443, () => {
-  console.log('HTTPS server running on port 443');
-});
-
-// Create an HTTP server to redirect to HTTPS
-http.createServer((req, res) => {
-  res.writeHead(301, { "Location": `https://${req.headers.host}${req.url}` });
-  res.end();
-}).listen(3008, () => {
-  console.log('HTTP server running on port 3008 and redirecting to HTTPS');
-});
+app.listen(3008)
