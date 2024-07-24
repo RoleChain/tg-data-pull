@@ -7,14 +7,6 @@ const cors = require('cors')
 
 app.use(cors());
 
-app.use((req, res, next) => {
-  if (req.secure) {
-    next();
-  } else {
-    res.redirect(`https://${req.headers.host}${req.url}`);
-  }
-});
-
 // Alternatively, you can specify options to customize the behavior
 const corsOptions = {
   origin: '*', // This will allow all origins
