@@ -130,19 +130,21 @@ async (req,res) => {
   const historyCount = firstHistoryResult.count;
 
   // Fetch message history in chunks with delay
-  for (let offset = 0; offset < 100; offset += 100) {
+  for (let offset = 0; offset < 300; offset += 100) {
     try {
       const history = await callApiWithRetry('messages.getHistory', {
         peer: inputPeer,
         add_offset: offset,
-        limit: 100,
+        limit: 300,
       });
 
       for(let i of history.messages){
         for(let j of history.users){
+          if(i.from_id){
           if(i.from_id.user_id==j.id){
             allMessages.push({message: i.message,username: j?.username, firstName:  j.first_name, lastName: j.last_name});
           }
+        }
         }
       }
       // Add delay between fetches to avoid rate limiting
