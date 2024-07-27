@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 
   if (!userId) {
     userId = uuidv4();
-    res.cookie('userId', userId,  { httpOnly: true, sameSite: 'Lax' });
+    res.cookie('userId', userId,  { httpOnly: true, secure: true, sameSite: 'None'  });
   }
 
   // Add the user ID to the set if it's not already present
