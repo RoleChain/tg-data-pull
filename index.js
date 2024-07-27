@@ -4,19 +4,40 @@ const { t1 } = require('@mtproto/core');
 const express = require('express')
 const app = express()
 const cors = require('cors')
-
-app.use(cors());
-
-// Alternatively, you can specify options to customize the behavior
-const corsOptions = {
-  origin: '*', // This will allow all origins
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-};
+const { v4: uuidv4 } = require('uuid');
+const cookieParser = require('cookie-parser');
 
 
-app.use(cors(corsOptions));
+
+// In-memory store for unique user IDs
+let uniqueUsers = new Set();
+
+app.use(cors({
+  origin: ['http://localhost:5173','https://www.bitcoinprice.live'], // Frontend origin
+  credentials: true, // Allow cookies and other credentials
+}));
+
+app.use(cookieParser());
+
+app.use((req, res, next) => {
+  let userId = req.cookies.userId;
+  console.log({userId})
+
+  if (!userId) {
+    userId = uuidv4();
+    res.cookie('userId', userId,  { httpOnly: true, sameSite: 'Lax' });
+  }
+
+  // Add the user ID to the set if it's not already present
+  uniqueUsers.add(userId);
+  next();
+});
+
+
+// Endpoint to get the count of unique users
+app.get('/uniqueUserCount', (req, res) => {
+  res.json({ count: uniqueUsers.size });
+});
 
 // Fetch user details
 async function getUser() {
@@ -139,13 +160,15 @@ async (req,res) => {
       });
 
       for(let i of history.messages){
+        if(i.message!=''){
         for(let j of history.users){
-          if(i.from_id){
+          if(i.from_id && i.message!=''){
           if(i.from_id.user_id==j.id){
             allMessages.push({message: i.message,username: j?.username, firstName:  j.first_name, lastName: j.last_name});
           }
         }
         }
+      }
       }
       // Add delay between fetches to avoid rate limiting
       await delay(1000); // Delay of 2 seconds (2000 milliseconds)
